@@ -1,0 +1,21 @@
+---
+- hosts: galaxyservers
+  become: true
+  become_user: root
+  tasks:
+    - name: Clone GitHub Extraction tool repository
+      git:
+        repo: https://github.com/Software-Analytics-Visualisation-Team/Andromeda-GitHub-Extraction-Tool.git
+        dest: /srv/galaxy/server/tools/moonshot
+        version: main
+        update: yes
+    - name: Insert tool info into the Galaxy tool_conf
+      ansible.builtin.blockinfile:
+        path: /srv/galaxy/server/config/tool_conf.xml.sample
+        marker: "<!-- {mark} TOOL INSERTION -->"
+        insertafter: "<toolbox>"
+        block: |
+          <section name="Moonshot" id="moonshot">
+            <tool file="moonshot/Extraction-Tool/github_extraction.xml" />
+          </section>
+        state: present

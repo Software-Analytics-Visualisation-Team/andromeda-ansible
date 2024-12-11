@@ -1,0 +1,4 @@
+[galaxyservers]
+`ip_address` ansible_connection=local ansible_user=`user name`
+[dbservers:children]
+galaxyservers
