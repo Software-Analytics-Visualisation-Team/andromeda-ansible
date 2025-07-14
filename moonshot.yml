@@ -12,7 +12,6 @@
     datatypes_conf_dir: "{{ galaxy_root }}/config/datatypes_conf.xml.sample"
     datatypes_dir: "{{ galaxy_root }}/lib/galaxy/datatypes"
     gx_it_proxy_bin: "/usr/local/bin/gx-it-proxy"  
-    gxit_sessions_db: "/srv/galaxy/var/interactivetools_map.sqlite"
     gx_it_proxy_ip: "127.0.0.1"
     gx_it_proxy_port: 4002
     gx_it_proxy_extra_opts: "--proxyPathPrefix /interactivetool/ep --verbose"
