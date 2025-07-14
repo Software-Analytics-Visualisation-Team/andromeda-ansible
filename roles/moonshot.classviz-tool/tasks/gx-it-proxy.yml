@@ -21,7 +21,7 @@
 
 - name: Ensure directory for the session DB exists
   ansible.builtin.file:
-    path: "{{ gxit_sessions_db | dirname }}"
+    path: "{{ interactivetools_map | dirname }}"
     state: directory
     owner: "{{ ansible_user_id }}"
     group: "{{ ansible_user_id }}"
@@ -41,7 +41,7 @@
       ExecStart={{ gx_it_proxy_bin }} \
         --ip {{ gx_it_proxy_ip }} \
         --port {{ gx_it_proxy_port }} \
-        --sessions {{ gxit_sessions_db }} \
+        --sessions {{ interactivetools_map }} \
         {{ gx_it_proxy_extra_opts }}
   notify:
     - Reload systemd
