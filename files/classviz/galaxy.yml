@@ -4,15 +4,13 @@ gravity:
     port: 4002
 
 galaxy:
-  admin_users: "your.username@email.adress"
+  admin_users: "your.username@email.address"
   job_config_file: config/job_conf.yml #If you already have a job_config: inline in your galaxy.yml, it won't load job_conf.yml. Comment it, or adjust your job_config.
   outputs_to_working_directory: true
 
   interactivetools_enable: true
-  interactivetools_map: database/interactivetools_map.sqlite #Adapt this path according to your galaxy_root, example :
-  # interactivetools_proxy_bin: /srv/galaxy/var/interactivetools_map.sqlite #Make sure this file exists
-  interactivetools_proxy_host: localhost:4002 #Active locally
-  interactivetools_upstream_proxy: false #Active locally
+  interactivetools_map: /srv/galaxy/var/interactivetools_map.sqlite #Adapt this path according to your galaxy_root, make sure this file exists
+  # interactivetools_proxy_host: localhost:4002 #Active locally
+  # interactivetools_upstream_proxy: false #Active locally
 
-  galaxy_infrastructure_url: http://localhost:8080 #Active locally
-
+  # galaxy_infrastructure_url: http://localhost:8080 #Active locally
