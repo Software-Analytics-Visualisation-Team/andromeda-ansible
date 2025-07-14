@@ -4,7 +4,7 @@ gravity:
     port: 4002
 
 galaxy:
-  admin_users: "agathe.minguet@free.fr"
+  admin_users: "your.username@email.adress"
   job_config_file: config/job_conf.yml #If you already have a job_config: inline in your galaxy.yml, it won't load job_conf.yml. Comment it, or adjust your job_config.
   outputs_to_working_directory: true
 
