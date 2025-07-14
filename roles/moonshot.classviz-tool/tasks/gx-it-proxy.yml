@@ -1,0 +1,93 @@
+# roles/classviz-tool/tasks/gx-it-proxy.yml
+---
+- name: Gather service facts
+  ansible.builtin.service_facts:
+
+- name: Install prerequisites (node + npm)
+  ansible.builtin.package:
+    name:
+      - nodejs
+      - npm
+    state: present
+  become: true
+  tags: gxitproxy_prereqs
+
+- name: Install gx-it-proxy globally with npm
+  community.general.npm:
+    name: "@galaxyproject/gx-it-proxy"
+    global: yes
+  become: true
+  tags: gxitproxy_install
+
+- name: Ensure directory for the session DB exists
+  ansible.builtin.file:
+    path: "{{ gxit_sessions_db | dirname }}"
+    state: directory
+    owner: "{{ ansible_user_id }}"
+    group: "{{ ansible_user_id }}"
+    mode: "0755"
+  become: true
+  tags: gxitproxy_dirs
+
+- name: Create systemd drop-in for gx-it-proxy - equivalent of sudo systemctl edit galaxy-gx-it-proxy.service
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/galaxy-gx-it-proxy.service.d/override.conf
+    owner: root
+    group: root
+    mode: "0644"
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart={{ gx_it_proxy_bin }} \
+        --ip {{ gx_it_proxy_ip }} \
+        --port {{ gx_it_proxy_port }} \
+        --sessions {{ gxit_sessions_db }} \
+        {{ gx_it_proxy_extra_opts }}
+  notify:
+    - Reload systemd
+    - Restart gx-it-proxy
+  become: true
+  tags: gxitproxy_override
+
+- name: Ensure the interactivetools map SQLite file exists
+  ansible.builtin.file:
+    path: "{{ interactivetools_map }}"
+    state: touch
+    owner: "{{ galaxy_system_user | default('galaxy_usr') }}"
+    group: "{{ galaxy_system_user | default('galaxy_usr') }}"
+    mode: "0644"
+  become: true
+  tags: gxitproxy_dirs
+
+- name: Enable & start gx-it-proxy
+  ansible.builtin.systemd:
+    name: galaxy-gx-it-proxy.service
+    enabled: true
+    state: started
+  become: true
+  when: not ansible_check_mode
+  tags: gxitproxy_run
+
+- name: Stat the Galaxy nginx conf
+  ansible.builtin.stat:
+    path: "{{ nginx_galaxy_path }}"
+  register: nginx_conf
+
+- name: Ensure IT proxy location block is present before the generic root block
+  ansible.builtin.blockinfile:
+    path: "{{ nginx_galaxy_path }}"
+    insertbefore: '^ *location / {'   # <-- on ne garde que celui-ci
+    block: |
+      location ~* ^/interactivetool/ep/(.+)$ {
+          proxy_pass         http://{{ gx_it_proxy_ip }}:{{ gx_it_proxy_port }};
+          proxy_http_version 1.1;
+          proxy_set_header   Host $host;
+          proxy_set_header   Upgrade $http_upgrade;
+          proxy_set_header   Connection "upgrade";
+          proxy_read_timeout 3600s;
+      }
+  when: nginx_conf.stat.exists
+  notify: Reload nginx
+  become: true
+  tags: galaxy_nginx_proxy
+

@@ -1,0 +1,28 @@
+---
+- name: Ensure Moonshot tools directory exists
+  file:
+    path: "{{ moonshot_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Insert Moonshot <section> if missing
+  blockinfile:
+    path: "{{ tool_conf }}"
+    marker: "<!-- {mark} MOONSHOT SECTION -->"
+    block: |
+      <section id="moonshot" name="Moonshot">
+      <!-- Moonshot tools will be added here -->
+      </section>
+    insertbefore: "</toolbox>"
+  when: "'<section id=\"moonshot\" name=\"Moonshot\">' not in lookup('file', tool_conf)"
+
+- name: Register Moonshot tools inside the section
+  blockinfile:
+    path: "{{ tool_conf }}"
+    marker: "<!-- {mark} MOONSHOT TOOLS -->"
+    block: |
+      <tool file="moonshot/Extraction-Tool/github_extraction.xml" />
+      <tool file="moonshot/Code-to-SPIF-Tool/zip_to_spif.xml" />
+      <tool file="moonshot/SPIF-To-SVIF-Tool/owl_to_json.xml" />
+      <tool file="moonshot/ClassViz-Tool/classviz.xml" />
+    insertafter: "<!-- Moonshot tools will be added here -->"

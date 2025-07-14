@@ -1,0 +1,16 @@
+---
+- name: Clone SPIF-To-SVIF-Tool into Galaxy
+  git:
+    repo: "https://github.com/Software-Analytics-Visualisation-Team/Andromeda-SPIFGrahpBuilder-Tool.git"
+    dest: "{{ moonshot_dir }}/SPIF-To-SVIF-Tool"
+    version: main
+    update: yes
+    force: yes
+
+- name: Add rdflib requirement to owl_to_json.xml
+  lineinfile:
+    path: "{{ moonshot_dir }}/SPIF-To-SVIF-Tool/owl_to_json.xml"
+    insertafter: '^\s*<requirements>'
+    line: '    <requirement type="package">rdflib</requirement>'
+    backrefs: no
+    

@@ -1,0 +1,15 @@
+---
+- name: Clone Extraction-Tool into Galaxy
+  git:
+    repo: "https://github.com/Software-Analytics-Visualisation-Team/Andromeda-GitHub-Extraction-Tool.git"
+    dest: "{{ moonshot_dir }}/Extraction-Tool"
+    version: main
+    update: yes
+    force: yes
+
+- name: Add requests requirement to github_extraction.xml
+  lineinfile:
+    path: "{{ moonshot_dir }}/Extraction-Tool/github_extraction.xml"
+    insertafter: '^\s*<requirements>'
+    line: '    <requirement type="package">requests</requirement>'
+    backrefs: no

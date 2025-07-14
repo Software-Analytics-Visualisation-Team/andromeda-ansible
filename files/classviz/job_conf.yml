@@ -1,0 +1,26 @@
+# config/job_conf.yml
+runners:
+  local:
+    load: galaxy.jobs.runners.local:LocalJobRunner
+    workers: 4
+
+execution:
+  default: default
+
+  environments:
+    # Non interactive tools
+    default:
+      runner: local
+      docker_enabled: false 
+      interactive: false      
+
+    # Interactive tools
+    docker_env:
+      runner: local
+      docker_enabled: true    
+      interactive: true       
+      docker_set_user: root   
+
+tools:
+  - id: "classviz"
+    environment: docker_env
