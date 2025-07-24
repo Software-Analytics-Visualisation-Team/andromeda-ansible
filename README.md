@@ -89,10 +89,10 @@ galaxy:
   interactivetools_enable: true
   interactivetools_map: database/interactivetools_map.sqlite #Adapt this path according to your galaxy_root, example :
   # interactivetools_proxy_bin: /srv/galaxy/var/interactivetools_map.sqlite #Make sure this file exists
-  interactivetools_proxy_host: localhost:4002 #Active locally
-  interactivetools_upstream_proxy: false #Active locally
+  # interactivetools_proxy_host: localhost:4002 #Active locally
+  # interactivetools_upstream_proxy: false #Active locally
 
-  galaxy_infrastructure_url: http://localhost:8080 #Active locally
+  # galaxy_infrastructure_url: http://localhost:8080 #Active locally
 ```
 
 ### Job Configuration (`job_conf.yml`)
