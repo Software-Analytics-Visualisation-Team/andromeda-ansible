@@ -162,7 +162,7 @@ When you run `moonshot.yml`, Ansible will:
 6. **Patch Galaxy core**:
 
    * `lib/galaxy/datatypes/triples.py` → add the **SPIF** Class.
-   * `lib/galaxy/datatypes/test.py` → add the **SVIF** Class.
+   * `lib/galaxy/datatypes/text.py` → add the **SVIF** Class.
 
   
 ### Additional system tasks performed automatically
