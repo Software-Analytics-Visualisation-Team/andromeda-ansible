@@ -217,6 +217,9 @@ While running ClassViz in production you may hit these occasional hiccups:
 4. **Job_conf.yml not loaded**  
    If you already have a job_config: inline in your `galaxy.yml`, it won't load job_conf.yml. Comment it, or adjust your job_config.  
 
+5. **Permission denied on /srv/galaxy/var/interactivetools_map.sqlite**  
+   If you have some permission errors, try for example : `sudo -u galaxy_usr bash -lc 'touch /srv/galaxy/var/_perm_test && echo "WRITE_OK" || echo "WRITE_FAIL"'`. If the writing fails, `sudo chown -R galaxy_usr:galaxy_usr /srv/galaxy/var` and now the galaxy_usr should be       able to launch the Classviz Tool.
+
 
 ## Recapitulative Check List
 - [ ] Ensure you have the prerequisites
