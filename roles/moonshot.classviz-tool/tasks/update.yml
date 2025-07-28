@@ -1,0 +1,24 @@
+---
+- name: Clone ClassViz-Tool into Galaxy
+  git:
+    repo: "https://github.com/Software-Analytics-Visualisation-Team/Andromeda-ClassViz-Tool.git"
+    dest: "{{ moonshot_dir }}/ClassViz-Tool"
+    version: main
+    update: yes
+    force: yes
+
+- name: Add jsonschema requirement to classviz.xml
+  lineinfile:
+    path: "{{ moonshot_dir }}/ClassViz-Tool/classviz.xml"
+    insertafter: '^\s*<requirements>'
+    line: '    <requirement type="package">jsonschema</requirement>'
+    backrefs: no
+
+- name: Build ClassViz Docker image
+  docker_image:
+    source: build
+    build:
+      path: "{{ moonshot_dir }}/ClassViz-Tool"
+    name: classviz
+    tag: latest
+  become: yes

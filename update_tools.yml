@@ -1,0 +1,20 @@
+---
+- hosts: galaxyservers
+  become: true
+  become_user: root
+
+  vars:
+    # galaxy_root: "{{ ansible_env.HOME }}/projects/galaxy" # To avoid accesses problems locally - use the home directory of the user running Ansible
+    galaxy_root: /srv/galaxy/server
+    moonshot_dir: "{{ galaxy_root }}/tools/moonshot"
+
+  roles:
+    - moonshot.extraction-tool
+    - moonshot.code-to-spif-tool
+    - moonshot.spif-to-svif-tool
+
+  tasks:
+    - name: Update ClassViz‑Tool only
+      include_role:
+        name: moonshot.classviz-tool
+        tasks_from: update.yml
