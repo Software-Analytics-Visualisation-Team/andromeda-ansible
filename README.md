@@ -89,10 +89,10 @@ galaxy:
   interactivetools_enable: true
   interactivetools_map: database/interactivetools_map.sqlite #Adapt this path according to your galaxy_root, example :
   # interactivetools_proxy_bin: /srv/galaxy/var/interactivetools_map.sqlite #Make sure this file exists
-  interactivetools_proxy_host: localhost:4002 #Active locally
-  interactivetools_upstream_proxy: false #Active locally
+  # interactivetools_proxy_host: localhost:4002 #Active locally
+  # interactivetools_upstream_proxy: false #Active locally
 
-  galaxy_infrastructure_url: http://localhost:8080 #Active locally
+  # galaxy_infrastructure_url: http://localhost:8080 #Active locally
 ```
 
 ### Job Configuration (`job_conf.yml`)
@@ -162,7 +162,7 @@ When you run `moonshot.yml`, Ansible will:
 6. **Patch Galaxy core**:
 
    * `lib/galaxy/datatypes/triples.py` → add the **SPIF** Class.
-   * `lib/galaxy/datatypes/test.py` → add the **SVIF** Class.
+   * `lib/galaxy/datatypes/text.py` → add the **SVIF** Class.
 
   
 ### Additional system tasks performed automatically
@@ -216,6 +216,9 @@ While running ClassViz in production you may hit these occasional hiccups:
 
 4. **Job_conf.yml not loaded**  
    If you already have a job_config: inline in your `galaxy.yml`, it won't load job_conf.yml. Comment it, or adjust your job_config.  
+
+5. **Permission denied on /srv/galaxy/var/interactivetools_map.sqlite**  
+   If you have some permission errors, try for example : `sudo -u galaxy_usr bash -lc 'touch /srv/galaxy/var/_perm_test && echo "WRITE_OK" || echo "WRITE_FAIL"'`. If the writing fails, `sudo chown -R galaxy_usr:galaxy_usr /srv/galaxy/var` and now the galaxy_usr should be       able to launch the Classviz Tool.
 
 
 ## Recapitulative Check List

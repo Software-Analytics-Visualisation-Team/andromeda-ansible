@@ -3,14 +3,11 @@
 - name: Gather service facts
   ansible.builtin.service_facts:
 
-- name: Install prerequisites (node + npm)
-  ansible.builtin.package:
-    name:
-      - nodejs
-      - npm
+- name: Install prerequisite (Node.js – includes npm)
+  ansible.builtin.apt:
+    name: nodejs
     state: present
-  become: true
-  tags: gxitproxy_prereqs
+    update_cache: yes
 
 - name: Install gx-it-proxy globally with npm
   community.general.npm:
@@ -76,7 +73,7 @@
 - name: Ensure IT proxy location block is present before the generic root block
   ansible.builtin.blockinfile:
     path: "{{ nginx_galaxy_path }}"
-    insertbefore: '^ *location / {'   # <-- on ne garde que celui-ci
+    insertbefore: '^\s*location / \{'
     block: |
       location ~* ^/interactivetool/ep/(.+)$ {
           proxy_pass         http://{{ gx_it_proxy_ip }}:{{ gx_it_proxy_port }};
