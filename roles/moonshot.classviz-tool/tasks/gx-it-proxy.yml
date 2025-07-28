@@ -3,14 +3,11 @@
 - name: Gather service facts
   ansible.builtin.service_facts:
 
-- name: Install prerequisites (node + npm)
-  ansible.builtin.package:
-    name:
-      - nodejs
-      - npm
+- name: Install prerequisite (Node.js – includes npm)
+  ansible.builtin.apt:
+    name: nodejs
     state: present
-  become: true
-  tags: gxitproxy_prereqs
+    update_cache: yes
 
 - name: Install gx-it-proxy globally with npm
   community.general.npm:
