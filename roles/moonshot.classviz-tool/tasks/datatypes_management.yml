@@ -37,7 +37,7 @@
           def sniff_prefix(self, file_prefix: FilePrefix) -> bool:
               # SEON check
               is_seon = bool(
-                  re.compile(r'xmlns:SEON_code="http://se-on.org/ontologies/domain-specific/2012/02/code.owl#")
+                  re.compile(r'xmlns:SEON_code="http://se-on.org/ontologies/domain-specific/2012/02/code.owl#"')
                   .search(file_prefix.contents_header)
               )
               # RDF check
