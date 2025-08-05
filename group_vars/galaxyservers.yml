@@ -9,7 +9,7 @@ galaxy_commit_id: release_24.0
 galaxy_force_checkout: true
 miniconda_prefix: "{{ galaxy_tool_dependency_dir }}/_conda"
 miniconda_version: 23.9
-miniconda_channels: ['conda-forge', 'defaults']
+miniconda_channels: ['conda-forge']
 
 # Galaxy Job Configuration
 galaxy_job_config:
