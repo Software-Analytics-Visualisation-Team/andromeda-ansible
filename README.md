@@ -196,11 +196,11 @@ While running ClassViz in production you may hit these occasional hiccups:
 1. **Intermittent “file not found” errors**  
    Some jobs still run on the old host runner instead of Docker, leading to missing `/opt/classviz/...` failures.  
    **Workaround**: Fully stop and then start your handler services so they reload the correct runner mapping. For example : 
-     ```bash
-     sudo systemctl stop galaxy-handler@0.service galaxy-handler@1.service
-     sudo systemctl start galaxy-handler@0.service galaxy-handler@1.service
-     ```
-     This ensures every handler picks up the new mapping of `classviz → docker_env`.
+   ```bash
+   sudo systemctl stop galaxy-handler@0.service galaxy-handler@1.service
+   sudo systemctl start galaxy-handler@0.service galaxy-handler@1.service
+   ```
+   This ensures every handler picks up the new mapping of `classviz → docker_env`.
 
 2. **Handlers or Gunicorn processes stubbornly stick around**  
    A simple `restart` can leave old processes running, so fixes aren’t applied uniformly.  
@@ -209,17 +209,36 @@ While running ClassViz in production you may hit these occasional hiccups:
 3. **Docker “permission denied” errors**  
    If Galaxy can’t spawn containers, you’ll see permissions failures.  
    **Workaround**: Add your Galaxy service user to the Docker group and re-login so it can launch images without sudo.
-     ```bash
-     sudo usermod -aG docker galaxy_usr
-     # Log out and back in, or restart the service
-     ```
+   ```bash
+   sudo usermod -aG docker galaxy_usr
+   # Log out and back in, or restart the service
+   ```
 
-4. **Job_conf.yml not loaded**  
-   If you already have a job_config: inline in your `galaxy.yml`, it won't load job_conf.yml. Comment it, or adjust your job_config.  
+4. **job_conf.yml not loaded**  
+   If you already have a `job_config:` inline in your `galaxy.yml`, it won't load `job_conf.yml`. Comment it out, or adjust your `job_config` section.
 
-5. **Permission denied on /srv/galaxy/var/interactivetools_map.sqlite**  
-   If you have some permission errors, try for example : `sudo -u galaxy_usr bash -lc 'touch /srv/galaxy/var/_perm_test && echo "WRITE_OK" || echo "WRITE_FAIL"'`. If the writing fails, `sudo chown -R galaxy_usr:galaxy_usr /srv/galaxy/var` and now the galaxy_usr should be       able to launch the Classviz Tool.
+5. **Permission denied on `/srv/galaxy/var/interactivetools_map.sqlite`**  
+   Some permission errors can prevent interactive tools from writing.  
+   **Workaround**: 
+   ```bash
+   sudo -u galaxy_usr bash -lc 'touch /srv/galaxy/var/_perm_test && echo "WRITE_OK" || echo "WRITE_FAIL"'
+   sudo chown -R galaxy_usr:galaxy_usr /srv/galaxy/var
+   ```
+   After correcting ownership, `galaxy_usr` should be able to launch the ClassViz tool.
 
+6. **Permission denied activating Conda environment**  
+   You might see:
+   ```
+   /srv/galaxy/var/dependencies/_conda/etc/profile.d/conda.sh: line 9: /srv/galaxy/var/dependencies/_conda/bin/conda: Permission denied
+   ```  
+   **Workaround**: Make the `conda` launcher executable and ensure the filesystem allows execution:
+   ```bash
+   chmod +x /srv/galaxy/var/dependencies/_conda/bin/conda
+   find /srv/galaxy/var/dependencies/_conda/bin -type f -exec chmod a+x {} \;
+   # If on a noexec mount, remount with exec or move the env:
+   mount | grep "$(df --output=target /srv/galaxy/var/dependencies/_conda | tail -1)"
+   ```
+   
 
 ## Recapitulative Check List
 - [ ] Ensure you have the prerequisites
