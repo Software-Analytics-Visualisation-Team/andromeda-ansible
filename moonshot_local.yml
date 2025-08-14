@@ -13,6 +13,8 @@
     ansible_user_id: "{{ ansible_env.USER }}"
     datatypes_conf_dir: "{{ galaxy_root }}/config/datatypes_conf.xml.sample"
     datatypes_dir: "{{ galaxy_root }}/lib/galaxy/datatypes"
+    designite_tool_root: "{{ ansible_env.HOME }}/projects/designite_java_Tool"
+    designite_repo_url: "https://github.com/tushartushar/DesigniteJava.git"
     gx_it_proxy_bin: "/usr/local/bin/gx-it-proxy"  
     gx_it_proxy_ip: "127.0.0.1"
     gx_it_proxy_port: 4002
@@ -26,4 +28,4 @@
     - moonshot.code-to-spif-tool
     - moonshot.spif-to-svif-tool
     - moonshot.classviz-tool
-    
+    - { role: designite.install, tags: ["designite"] }

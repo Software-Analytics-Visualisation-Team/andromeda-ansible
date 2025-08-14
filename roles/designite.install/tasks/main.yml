@@ -1,0 +1,52 @@
+---
+# 1) Clone the Galaxy tool wrapper into tools/moonshot
+- name: Ensure moonshot tools directory exists
+  file:
+    path: "{{ moonshot_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Clone Designite-Java-Tool (Galaxy wrapper) into tools/moonshot
+  git:
+    repo: "https://github.com/Software-Analytics-Visualisation-Team/Designite-Java-Tool.git"
+    dest: "{{ moonshot_dir }}/Designite-Java-Tool"
+    version: "main"
+    update: yes
+
+# 2) Clone the official DesigniteJava repo inside the wrapper directory
+- name: Clone DesigniteJava inside the tool directory
+  git:
+    repo: "{{ designite_repo_url }}"
+    dest: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava"
+    version: "master"
+    update: yes
+
+# 3) Build the JAR with Maven
+- name: Build DesigniteJava.jar (skip if already built)
+  command: mvn -U clean package -DskipTests
+  args:
+    chdir: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava"
+    creates: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/target/DesigniteJava.jar"
+
+# 4) Symlink the built JAR at the tool root
+- name: Ensure DesigniteJava/output exists for logs
+  file:
+    path: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/output"
+    state: directory
+    mode: "0755"
+
+- name: Symlink DesigniteJava.jar into the tool root
+  file:
+    src: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/target/DesigniteJava.jar"
+    dest: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava.jar"
+    state: link
+    force: yes
+
+# 5) Register the tool in Galaxy's tool panel
+- name: Register Designite tool in Galaxy tool panel
+  blockinfile:
+    path: "{{ tool_conf }}"          # expects this to be defined by the caller
+    marker: "<!-- {mark} DESIGNITE TOOL -->"
+    insertafter: "<!-- Moonshot tools will be added here -->"
+    block: |
+      <tool file="moonshot/Designite-Java-Tool/designite_java.xml" />
