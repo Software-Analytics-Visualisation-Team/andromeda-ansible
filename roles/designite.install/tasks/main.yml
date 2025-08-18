@@ -22,17 +22,22 @@
     update: yes
 
 # 3) Build the JAR with Maven
-- name: Ensure Maven is installed (only if missing)
+- name: Ensure JDK17 and Maven are installed
   ansible.builtin.package:
-    name: maven
+    name:
+      - openjdk-17-jdk-headless
+      - maven
     state: present
   become: true
 
 - name: Build DesigniteJava.jar (skip if already built)
-  command: mvn -U clean package -DskipTests
+  ansible.builtin.command: mvn -U clean package -DskipTests
   args:
     chdir: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava"
     creates: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/target/DesigniteJava.jar"
+  environment:
+    JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
+    PATH: /usr/lib/jvm/java-17-openjdk-amd64/bin:{{ ansible_env.PATH }}
 
 # 4) Symlink the built JAR at the tool root
 - name: Ensure DesigniteJava/output exists for logs
