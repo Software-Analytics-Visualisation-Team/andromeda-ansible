@@ -66,17 +66,17 @@ When prompted for the vault password, enter:
 galaxy
 ```
 
-## Installing Only the Designite Tool
+## Installing the Designite Tool
 
-To install or update only the Designite tool, you can use the `designite` tag with Ansible. For example:
+To install or update the Designite tool, you can use the `designite` tag with Ansible. For example:
 
 ```bash
-ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite --check
+ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite
 ```
 
 Replace `[playbook_name]` with your playbook file, such as `moonshot.yml` or `update_tools.yml`.
 
-This will run only the tasks and roles tagged with `designite`.
+This will also run the tasks and roles tagged with `designite`.
 
 ## Prerequisite configuration for the ClassViz Tool
 ⚠️ Warning: These settings are required for the ClassViz Tool to work.
