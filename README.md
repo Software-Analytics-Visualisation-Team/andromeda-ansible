@@ -71,7 +71,7 @@ galaxy
 To install or update the Designite tool, you can use the `designite` tag with Ansible. For example:
 
 ```bash
-ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite --check
+ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite
 ```
 
 Replace `[playbook_name]` with your playbook file, such as `moonshot.yml` or `update_tools.yml`.
