@@ -7,12 +7,14 @@
     # galaxy_root: "{{ ansible_env.HOME }}/projects/galaxy" # To avoid accesses problems locally - use the home directory of the user running Ansible
     galaxy_root: /srv/galaxy/server
     moonshot_dir: "{{ galaxy_root }}/tools/moonshot"
+    designite_repo_url: "https://github.com/tushartushar/DesigniteJava.git"
 
   roles:
     - moonshot.extraction-tool
     - moonshot.code-to-spif-tool
     - moonshot.spif-to-svif-tool
-
+    - { role: designite.install, tags: ["designite"] }
+        
   tasks:
     - name: Update ClassViz‑Tool only
       include_role:
