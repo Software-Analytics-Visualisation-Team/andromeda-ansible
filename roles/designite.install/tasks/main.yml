@@ -22,6 +22,12 @@
     update: yes
 
 # 3) Build the JAR with Maven
+- name: Ensure Maven is installed (only if missing)
+  ansible.builtin.package:
+    name: maven
+    state: present
+  become: true
+
 - name: Build DesigniteJava.jar (skip if already built)
   command: mvn -U clean package -DskipTests
   args:
