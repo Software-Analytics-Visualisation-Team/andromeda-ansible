@@ -250,7 +250,14 @@ While running ClassViz in production you may hit these occasional hiccups:
    # If on a noexec mount, remount with exec or move the env:
    mount | grep "$(df --output=target /srv/galaxy/var/dependencies/_conda | tail -1)"
    ```
-   
+
+7. **Dependency installation fails**  
+   When you go to **Admin** → **Manage Dependencies** and try to install the dependencies for the Code Parsing Tool, and it stays unresolved; it may be a `CondaToSNonInteractiveError`. It means you have to accept some Terms of Service :
+   ```bash
+   sudo -u galaxy_usr /srv/galaxy/var/dependencies/_conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
+   sudo -u galaxy_usr /srv/galaxy/var/dependencies/_conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
+   ```
+
 
 ## Recapitulative Check List
 - [ ] Ensure you have the prerequisites
