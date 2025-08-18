@@ -66,9 +66,9 @@ When prompted for the vault password, enter:
 galaxy
 ```
 
-## Installing the Designite Tool
+## Installing ONLY the Designite Tool
 
-To install or update the Designite tool, you can use the `designite` tag with Ansible. For example:
+To install or update only the Designite tool, you can use the `designite` tag with Ansible. For example:
 
 ```bash
 ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite
