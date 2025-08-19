@@ -1,85 +1,141 @@
 # Andromeda Ansible Playbook
 
-This repository contains the Ansible playbook and configuration files for deploying and managing the Andromeda platform.
+This repository contains the Ansible playbooks and configuration files for deploying and managing the Andromeda tools on an existing Galaxy instance.
 
-# Moonshot.yml : Adding the Moonshot Tools
+## Moonshot: add and update the Moonshot tools
 
+---
 
 ## Table of Contents
 
+* [Quickstart](#quickstart)
+* [Which playbook should I run?](#which-playbook-should-i-run)
+* [Key variables in `moonshot.yml` (what each path points to)](#key-variables-in-moonshotyml-what-each-path-points-to)
+* [Designite license (vaulted)](#designite-license-vaulted)
 * [Prerequisites](#prerequisites)
 * [Installation](#installation)
-* [Running the Playbook](#running-the-playbook)
-* [Prerequisite configuration for the ClassViz Tool](#prerequisite-configuration-for-the-classviz-tool)
-* [Managing Dependencies](#managing-dependencies)
-* [What Does the Playbook Do?](#what-does-the-playbook-do)
-* [Recapitulative Check List](#recapitulative-check-list)
+* [Running the playbooks](#running-the-playbooks)
+* [Prerequisite configuration for the ClassViz tool](#prerequisite-configuration-for-the-classviz-tool)
+* [Managing dependencies in Galaxy](#managing-dependencies-in-galaxy)
+* [What the playbooks do](#what-the-playbooks-do)
+* [Troubleshooting](#troubleshooting)
+* [Recap checklist](#recap-checklist)
+
+---
+
+## Quickstart
+
+```bash
+# prerequisites (Ubuntu/Debian)
+sudo apt update && sudo apt install -y python3.12-dev build-essential python3-lib2to3
+
+# clone + deps
+git clone https://github.com/Software-Analytics-Visualisation-Team/andromeda-ansible.git
+cd andromeda-ansible
+ansible-galaxy install -r requirements.yml
+ansible-galaxy collection install community.general community.docker
+
+# configure variables (see sections below), then:
+ansible-playbook moonshot.yml --ask-become
+```
+
+> This repository assumes Galaxy and nginx are already installed and running. These playbooks **wire the Andromeda tools into that existing instance** and set up gx-it-proxy and Docker for ClassViz.
+
+---
+
+## Which playbook should I run?
+
+* **`moonshot.yml`** → first install, or whenever you need **gx-it-proxy**, **datatypes**, and the **nginx wiring** (re)applied.
+* **`update_tools.yml`** → refresh the **tool code** and **rebuild ClassViz** **without** touching datatypes, gx-it-proxy, or nginx.
+
+---
+
+## Key variables in `moonshot.yml` (what each path points to)
+
+A newcomer needs to know what each path really is on their Galaxy. Adjust these to your instance; defaults target a standard **`/srv/galaxy/server`** layout.
+
+* **`galaxy_root`** → your Galaxy **`server/`** root.
+* **`tool_conf`** → your **live toolbox XML** (not the `.sample`; point to the XML your instance actually loads).
+* **`datatypes_conf_dir`** → the directory containing the **datatypes XML** that Galaxy loads.
+* **`datatypes_dir`** → **`lib/galaxy/datatypes`** inside your Galaxy checkout.
+* **`nginx_galaxy_path`** → the **vhost file** your nginx actually uses for Galaxy.
+* **`interactivetools_map`** → a **writable** var file path for Galaxy’s interactive tools map (Galaxy must be able to read/write it).
+
+> Tip: keep your paths consistent with how Galaxy is started (uWSGI/systemd/virtualenv) so the same files are visible to both Galaxy and Ansible.
+
+---
+
+## Designite license (vaulted)
+
+Store your Designite license key in a **vaulted** vars file and reference it with `vault_designite_license_key`.
+
+```yaml
+# group_vars/secret.yml  (encrypt with ansible-vault)
+vault_designite_license_key: "XXXX-XXXX-XXXX-XXXX"
+```
+
+Keep the file encrypted with `ansible-vault`. Do **not** commit real secrets.
+
+---
 
 ## Prerequisites
 
-Ensure you have the following installed on your system:
+* Ubuntu/Debian host with sudo access
+* Python **3.12**
+* Ansible **2.14+** (recommended)
+* Existing **Galaxy** + **nginx** installation
+* Docker available for building/running ClassViz images
 
-* **Operating System**: Ubuntu (or Debian-based)
-* **Python 3.12**
-* **Ansible** (tested with Ansible 2.14+)
-* **An operational Galaxy**
-
-### System Packages
-
-```bash
-sudo apt update
-sudo apt install python3.12-dev build-essential python3-lib2to3
-```
-
-### Install Ansible
+Prepare system packages:
 
 ```bash
-sudo apt install ansible
-# or via pip:
-# pip3 install ansible
+sudo apt update && sudo apt install -y python3.12-dev build-essential python3-lib2to3
 ```
+
+---
 
 ## Installation
-
-Clone this repository:
 
 ```bash
 git clone https://github.com/Software-Analytics-Visualisation-Team/andromeda-ansible.git
 cd andromeda-ansible
+
+# Install role/collection dependencies
+ansible-galaxy install -r requirements.yml
+ansible-galaxy collection install community.general community.docker
 ```
 
-## Running the Playbook
+---
 
-First, adapt in `moonshot.yml` the **vars** according to your configuration and file organization.
+## Running the playbooks
 
-Execute the main playbook `moonshot.yml`:
+Before running, review and adapt variables in **`moonshot.yml`** to match your paths (see [Key variables](#key-variables-in-moonshotyml-what-each-path-points-to)).
+
+### First install / full wiring
 
 ```bash
-ansible-playbook moonshot.yml \
-  --ask-vault-pass \
-  --ask-become
+ansible-playbook moonshot.yml --ask-become --ask-vault-pass
 ```
 
-When prompted for the vault password, enter:
-
-```text
-galaxy
-```
-
-## Installing ONLY the Designite Tool
-
-To install or update only the Designite tool, you can use the `designite` tag with Ansible. For example:
+### Update only the tool code and rebuild ClassViz
 
 ```bash
-ansible-playbook [playbook_name] --ask-vault-pass --ask-become --tags designite
+ansible-playbook update_tools.yml --ask-become --ask-vault-pass
 ```
 
-Replace `[playbook_name]` with your playbook file, such as `moonshot.yml` or `update_tools.yml`.
+### (Optional) Install/update **only** the Designite tool
 
-This will also run the tasks and roles tagged with `designite`.
+```bash
+ansible-playbook moonshot.yml --ask-become --ask-vault-pass --tags designite
+# or
+ansible-playbook update_tools.yml --ask-become --ask-vault-pass --tags designite
+```
 
-## Prerequisite configuration for the ClassViz Tool
-⚠️ Warning: These settings are required for the ClassViz Tool to work.
+---
+
+## Prerequisite configuration for the ClassViz tool
+
+> ⚠️ These settings are required for ClassViz to work (Docker, gx-it-proxy, and Galaxy interactive tools must be enabled and reachable). Configure these according to your environment before first run.
 
 ### Galaxy Configuration (`galaxy.yml`)
 
@@ -141,128 +197,47 @@ Full examples are available under :
 - [files/classviz/job_conf.yml](files/classviz/job_conf.yml)
 - [files/classviz/job_conf.xml](files/classviz/job_conf.xml)
 
+---
 
-## Managing Dependencies
+## Managing dependencies in Galaxy
 
-After the playbook completes, open the Ansible Galaxy web UI as an administrator:
+After the playbook completes, open Galaxy as an **admin** and go to **Admin → Manage Dependencies**. Select and install the dependencies for all Andromeda tools. On the first run you may need to re-run the code-to-SPIF role once (known quirk).
 
-1. Navigate to **Admin** → **Manage Dependencies**.
-2. Select and install the dependencies for all four tools.
+---
 
-> **Note:** On the first run, you may need to re-run the `code to spif` role due to a bug.
+## What the playbooks do
 
-## What Does the Playbook Do?
+At a high level:
 
-When you run `moonshot.yml`, Ansible will:
+* Clone/update the Andromeda tool repositories in the expected tools directory.
+* Ensure required Python packages are declared so Galaxy installs them automatically.
+* Build the **Docker image for ClassViz**.
+* Update Galaxy’s toolbox to expose the **Moonshot** section and tools.
+* Wire up **gx-it-proxy** and adjust **nginx** configuration as needed.
+* Place/update the Galaxy **interactive tools map** file.
 
-1. **Clone each Andromeda tool** into `tools/moonshot`:
+`update_tools.yml` skips datatypes, gx-it-proxy and nginx changes; it focuses on pulling latest tool code and rebuilding ClassViz.
 
-   * Andromeda-GitHub-Extraction-Tool
-   * Andromeda-Code-Parsing-Tool
-   * Andromeda-SPIFGrahpBuilder-Tool
-   * Andromeda-ClassViz-Tool
+---
 
-2. **Inject required Python packages** into each tool’s definition so Galaxy installs them automatically.
+## Troubleshooting
 
-3. **Build The Docker Image for ClassViz**.
+* **Dependencies fail to install in Galaxy** → retry from **Admin → Manage Dependencies**; verify the conda env is executable and internet access is available.
+* **nginx changes not applied** → confirm `nginx_galaxy_path` points to the vhost file actually loaded by your nginx service, then reload nginx.
+* **Interactive tools don’t start** → check gx-it-proxy is running and that the `interactivetools_map` path is writable by Galaxy.
 
-4. **Update Galaxy’s toolbox** in `tool_conf.xml.sample`, adding a `Moonshot` section with each tool.
+---
 
-### Datatypes checks
+## Recap checklist
 
-5. **Adapt** `config/datatypes_conf.xml.sample` by registering the **SPIF** and **SVIF** datatypes.
-6. **Patch Galaxy core**:
-
-   * `lib/galaxy/datatypes/triples.py` → add the **SPIF** Class.
-   * `lib/galaxy/datatypes/text.py` → add the **SVIF** Class.
-
-  
-### Additional system tasks performed automatically
-
-7. **Install and configure** the Galaxy Interactive Tools proxy:
-   * `npm install -g @galaxyproject/gx-it-proxy`
-   * Create / edit the systemd unit **galaxy-gx-it-proxy.service** `sudo systemctl edit galaxy-gx-it-proxy.service` with
-   
-      - `--sessions /srv/galaxy/var/interactivetools_map.sqlite` (in the var folder because it's an editable folder)
-      - also make sure you have the correct gx-it-proxy path : `/usr/local/bin/gx-it-proxy`
-   * `systemctl daemon-reload && systemctl restart galaxy-gx-it-proxy.service`
-  
-
-8. **Update Nginx** (file `/etc/nginx/sites-enabled/galaxy`) to add a location block that proxies `/interactivetool/ep/` to `127.0.0.1:4002`.
-     ```bash
-        location ~* ^/interactivetool/ep/(.+)$ {
-            proxy_pass         http://127.0.0.1:4002;
-            proxy_http_version 1.1;
-            proxy_set_header   Host $host;
-            proxy_set_header   Upgrade $http_upgrade;
-            proxy_set_header   Connection "upgrade";
-            proxy_read_timeout 3600s;
-        }     ```
- 
-These extra steps mean that if anything fails you can reproduce them manually using the commands above.
-
-## Debug Notes
-
-While running ClassViz in production you may hit these occasional hiccups:
-
-1. **Intermittent “file not found” errors**  
-   Some jobs still run on the old host runner instead of Docker, leading to missing `/opt/classviz/...` failures.  
-   **Workaround**: Fully stop and then start your handler services so they reload the correct runner mapping. For example : 
-   ```bash
-   sudo systemctl stop galaxy-handler@0.service galaxy-handler@1.service
-   sudo systemctl start galaxy-handler@0.service galaxy-handler@1.service
-   ```
-   This ensures every handler picks up the new mapping of `classviz → docker_env`.
-
-2. **Handlers or Gunicorn processes stubbornly stick around**  
-   A simple `restart` can leave old processes running, so fixes aren’t applied uniformly.  
-   **Workaround**: Stop the handler units, verify no old `main.py` processes remain, then start them again so every worker picks up the latest code.
-
-3. **Docker “permission denied” errors**  
-   If Galaxy can’t spawn containers, you’ll see permissions failures.  
-   **Workaround**: Add your Galaxy service user to the Docker group and re-login so it can launch images without sudo.
-   ```bash
-   sudo usermod -aG docker galaxy_usr
-   # Log out and back in, or restart the service
-   ```
-
-4. **job_conf.yml not loaded**  
-   If you already have a `job_config:` inline in your `galaxy.yml`, it won't load `job_conf.yml`. Comment it out, or adjust your `job_config` section.
-
-5. **Permission denied on `/srv/galaxy/var/interactivetools_map.sqlite`**  
-   Some permission errors can prevent interactive tools from writing.  
-   **Workaround**: 
-   ```bash
-   sudo -u galaxy_usr bash -lc 'touch /srv/galaxy/var/_perm_test && echo "WRITE_OK" || echo "WRITE_FAIL"'
-   sudo chown -R galaxy_usr:galaxy_usr /srv/galaxy/var
-   ```
-   After correcting ownership, `galaxy_usr` should be able to launch the ClassViz tool.
-
-6. **Permission denied activating Conda environment**  
-   You might see:
-   ```
-   /srv/galaxy/var/dependencies/_conda/etc/profile.d/conda.sh: line 9: /srv/galaxy/var/dependencies/_conda/bin/conda: Permission denied
-   ```  
-   **Workaround**: Make the `conda` launcher executable and ensure the filesystem allows execution:
-   ```bash
-   chmod +x /srv/galaxy/var/dependencies/_conda/bin/conda
-   find /srv/galaxy/var/dependencies/_conda/bin -type f -exec chmod a+x {} \;
-   # If on a noexec mount, remount with exec or move the env:
-   mount | grep "$(df --output=target /srv/galaxy/var/dependencies/_conda | tail -1)"
-   ```
-
-7. **Dependency installation fails**  
-   When you go to **Admin** → **Manage Dependencies** and try to install the dependencies for the Code Parsing Tool, and it stays unresolved; it may be a `CondaToSNonInteractiveError`. It means you have to accept some Terms of Service :
-   ```bash
-   sudo -u galaxy_usr /srv/galaxy/var/dependencies/_conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/main
-   sudo -u galaxy_usr /srv/galaxy/var/dependencies/_conda/bin/conda tos accept --override-channels --channel https://repo.anaconda.com/pkgs/r
-   ```
+* [ ] Prerequisites installed (Python 3.12, Ansible, Docker)
+* [ ] Repo cloned + galaxy requirements installed
+* [ ] Variables reviewed (`galaxy_root`, `tool_conf`, `datatypes_*`, `nginx_galaxy_path`, `interactivetools_map`)
+* [ ] Designite license stored in **vaulted** `group_vars/secret.yml`
+* [ ] `moonshot.yml` run for first install (wiring)
+* [ ] `update_tools.yml` used for subsequent updates
+* [ ] Dependencies installed from Galaxy admin UI
 
 
-## Recapitulative Check List
-- [ ] Ensure you have the prerequisites
-- [ ] Run the playbook
-- [ ] Adapt your configuration files if needed
-- [ ] Install dependencies via the Admin interface
 
- 
+```
