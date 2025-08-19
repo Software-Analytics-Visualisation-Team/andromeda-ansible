@@ -4,12 +4,13 @@
   become_user: root
 
   vars:
-    designite_repo_url: "https://github.com/tushartushar/DesigniteJava.git"
     # galaxy_root: "{{ ansible_env.HOME }}/projects/galaxy" # To avoid accesses problems locally - use the home directory of the user running Ansible
     galaxy_root: /srv/galaxy/server
     moonshot_dir: "{{ galaxy_root }}/tools/moonshot"
     tool_conf: "{{ galaxy_root }}/config/tool_conf.xml.sample"
-
+    designite_pro_url: "https://www.designite-tools.com/assets/DesigniteJava.jar"
+    designite_license_key: "{{ vault_designite_license_key | default('') }}"
+    
   roles:
     - moonshot.extraction-tool
     - moonshot.code-to-spif-tool

@@ -1,5 +1,4 @@
----
-# 1) Clone the Galaxy tool wrapper into tools/moonshot
+# 1) Clone the Designite-Java-Tool repository
 - name: Ensure moonshot tools directory exists
   file:
     path: "{{ moonshot_dir }}"
@@ -13,50 +12,38 @@
     version: "main"
     update: yes
 
-# 2) Clone the official DesigniteJava repo inside the wrapper directory
-- name: Clone DesigniteJava inside the tool directory
-  git:
-    repo: "{{ designite_repo_url }}"
-    dest: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava"
-    version: "master"
-    update: yes
+# 2) Choose URL (Pro if key provided, else Community)
+- name: Set Designite JAR URL (Pro if key provided, else Community)
+  set_fact:
+    designite_effective_url: >-
+      {{ (designite_license_key | default('') | length > 0)
+         | ternary( designite_pro_url | default('https://www.designite-tools.com/assets/DesigniteJava.jar'),
+                    designite_community_url | default('https://www.designite-tools.com/assets/DesigniteJavaCommunity.jar')) }}
 
-# 3) Build the JAR with Maven
-- name: Ensure JDK17 and Maven are installed
-  ansible.builtin.package:
-    name:
-      - openjdk-17-jdk-headless
-      - maven
-    state: present
-  become: true
-
-- name: Build DesigniteJava.jar (skip if already built)
-  ansible.builtin.command: mvn -U clean package -DskipTests
-  args:
-    chdir: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava"
-    creates: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/target/DesigniteJava.jar"
-  environment:
-    JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
-    PATH: /usr/lib/jvm/java-17-openjdk-amd64/bin:{{ ansible_env.PATH }}
-
-# 4) Symlink the built JAR at the tool root
-- name: Ensure DesigniteJava/output exists for logs
-  file:
-    path: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/output"
-    state: directory
-    mode: "0755"
-
-- name: Symlink DesigniteJava.jar into the tool root
-  file:
-    src: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava/target/DesigniteJava.jar"
+- name: Download DesigniteJava JAR (Pro or Community)
+  get_url:
+    url: "{{ designite_effective_url }}"
     dest: "{{ moonshot_dir }}/Designite-Java-Tool/DesigniteJava.jar"
-    state: link
-    force: yes
+    mode: "0644"
+    force: yes        
+    validate_certs: yes
 
-# 5) Register the tool in Galaxy's tool panel
+# 3) Register Designite license only if key provided
+- name: Register Designite license (node-locked, Pro)
+  command: "java -jar DesigniteJava.jar -r {{ designite_license_key }}"
+  args:
+    chdir: "{{ moonshot_dir }}/Designite-Java-Tool"
+  become: true #comment locally
+  become_user: "{{ galaxy_user_name | default('galaxy') }}"  #comment locally
+  when: (designite_license_key | default('')) | length > 0
+  changed_when: false
+  failed_when: false
+  no_log: true  #comment locally
+
+# 4) Declare tool in Galaxy panel
 - name: Register Designite tool in Galaxy tool panel
   blockinfile:
-    path: "{{ tool_conf }}"          # expects this to be defined by the caller
+    path: "{{ tool_conf }}"
     marker: "<!-- {mark} DESIGNITE TOOL -->"
     insertafter: "<!-- Moonshot tools will be added here -->"
     block: |
